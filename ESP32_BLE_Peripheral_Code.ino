@@ -40,6 +40,7 @@ class pServerCallbacks: public BLEServerCallbacks{
 //defining services
 #define SERVICE1_UUID           "8be5a5e3-82bd-4cb8-89c9-f3022fce303a"
 #define SERVICE2_UUID           "2f95d50f-c124-45f2-825b-6c5ed1a35463"
+#define SERVICE3_UUID           "05fb73dc-0066-11ec-9a03-0242ac130003" 
 
 //defining characteristics
 BLECharacteristic *UltronCharacteristic;
@@ -47,12 +48,18 @@ BLECharacteristic *TouchPadCharacteristic;
 BLECharacteristic *xCharacteristic;
 BLECharacteristic *yCharacteristic;
 BLECharacteristic *zCharacteristic;
+BLECharacteristic *Drum_Characteristic;
+BLECharacteristic *Drum2_Characteristic;
+BLECharacteristic *Drum3_Characteristic;
 
 #define UltronChar_UUID "8a90c654-f336-4957-8c01-223f1e4dd517"
 #define TouchPadChar_UUID "ec62e45e-6835-4857-99ae-dc967774b166"
 #define xChar_UUID "9dabffb9-5aa8-429d-ac32-1c872d45a7d6"
 #define yChar_UUID "7c0ef830-a49d-47c3-b31c-bc2d5150dfbe"
 #define zChar_UUID "00660493-2cb1-4a16-8e86-86cc3d6a1c9d"
+#define Drum_UUID "e384b790-ff7b-11eb-9a03-0242ac130003"
+#define Drum2_UUID "86e327fa-0044-11ec-9a03-0242ac130003"
+#define Drum3_UUID "02ec68de-0045-11ec-9a03-0242ac130003"  
 
 
 float txValue1 = 0.00;
@@ -69,6 +76,9 @@ const byte DistEcho = 12;
 const byte LED = 14;
 const byte touchPad = 27;
 const byte Knx_LED = 32;
+const byte Drum = 21;
+const byte Drum2 = 4;
+const byte Drum3 = 36;
 
 //Full BLE set up function, to be placed in the void setup.
 void BLE_setup(){
@@ -87,6 +97,7 @@ void BLE_setup(){
   
   BLEService *pService = pServer->createService(SERVICE1_UUID);
   BLEService *IMUService = pServer->createService(SERVICE2_UUID);
+  BLEService *TouchPadService = pServer->createService(SERVICE3_UUID);
 
   UltronCharacteristic = pService->createCharacteristic(
                        UltronChar_UUID,
@@ -96,8 +107,26 @@ void BLE_setup(){
                     
                     );
 
-  TouchPadCharacteristic = pService->createCharacteristic(
+  TouchPadCharacteristic = TouchPadService->createCharacteristic(
                        TouchPadChar_UUID,
+                       BLECharacteristic::PROPERTY_NOTIFY|
+                       BLECharacteristic::PROPERTY_WRITE |
+                       BLECharacteristic::PROPERTY_READ
+                    );
+  Drum_Characteristic = TouchPadService->createCharacteristic(
+                       Drum_UUID,
+                       BLECharacteristic::PROPERTY_NOTIFY|
+                       BLECharacteristic::PROPERTY_WRITE |
+                       BLECharacteristic::PROPERTY_READ
+                    );
+  Drum2_Characteristic = TouchPadService->createCharacteristic(
+                       Drum2_UUID,
+                       BLECharacteristic::PROPERTY_NOTIFY|
+                       BLECharacteristic::PROPERTY_WRITE |
+                       BLECharacteristic::PROPERTY_READ
+                    );
+  Drum3_Characteristic = TouchPadService->createCharacteristic(
+                       Drum3_UUID,
                        BLECharacteristic::PROPERTY_NOTIFY|
                        BLECharacteristic::PROPERTY_WRITE |
                        BLECharacteristic::PROPERTY_READ
@@ -125,10 +154,15 @@ void BLE_setup(){
   TouchPadCharacteristic->addDescriptor(new BLE2902());
   xCharacteristic->addDescriptor(new BLE2902());
   yCharacteristic->addDescriptor(new BLE2902());
-  zCharacteristic->addDescriptor(new BLE2902());  
+  zCharacteristic->addDescriptor(new BLE2902());
+  Drum_Characteristic->addDescriptor(new BLE2902());
+  Drum2_Characteristic->addDescriptor(new BLE2902());
+  Drum3_Characteristic->addDescriptor(new BLE2902());
+  
   
   pService->start();
   IMUService->start();
+  TouchPadService->start();
   
   pServer->getAdvertising()->start();
   }
@@ -159,6 +193,32 @@ void BLE_Data(){
       TouchPadCharacteristic->setValue("0");
       TouchPadCharacteristic->notify();
     }
+
+    if(digitalRead(Drum)==HIGH){
+      Drum_Characteristic->setValue("1");
+      Drum_Characteristic->notify();
+    }
+    else{
+        Drum_Characteristic->setValue("0");
+        Drum_Characteristic->notify();
+      }
+   if(digitalRead(Drum2)==HIGH){
+      Drum2_Characteristic->setValue("1");
+      Drum2_Characteristic->notify();
+    }
+    else{
+        Drum2_Characteristic->setValue("0");
+        Drum2_Characteristic->notify();
+      }
+  if(digitalRead(Drum3)==HIGH){
+      Drum3_Characteristic->setValue("1");
+      Drum3_Characteristic->notify();
+    }
+    else{
+        Drum3_Characteristic->setValue("0");
+        Drum3_Characteristic->notify();
+      }
+     
      txValue2 = euler.x();
      char txString_two[1];
      dtostrf(txValue2, 1, 2, txString_two);
@@ -218,6 +278,9 @@ void setup() {
   pinMode(touchPad,INPUT);
   pinMode(LED,OUTPUT);
   pinMode(Knx_LED,OUTPUT);
+  pinMode(Drum,INPUT);
+  pinMode(Drum2,INPUT);
+  pinMode(Drum3,INPUT);
 
   BLE_setup();
 }
